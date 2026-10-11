@@ -1,0 +1,17 @@
+{
+  "name": "sitesentry",
+  "version": "1.2.0",
+  "private": false,
+  "description": "Self-hosted website diagnostics with DNS-pinned requests and SSRF safeguards",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/scanner.js && node --check public/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

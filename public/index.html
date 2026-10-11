@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="SiteSentry performs a lightweight, permission-based website health and security-header review.">
+  <title>SiteSentry — Website Health Scanner</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="SiteSentry home"><span class="brand-mark">S</span><span>Site<span class="brand-accent">Sentry</span></span></a>
+    <div class="top-meta"><span class="status-dot"></span> Non-invasive scanner <span class="version">v1.2.0</span></div>
+  </header>
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow"><span class="eyebrow-line"></span> WEBSITE HEALTH INTELLIGENCE</div>
+      <h1>Know your website.<br><span>Strengthen your security.</span></h1>
+      <p class="hero-copy">A fast, transparent first-pass review of security headers, HTTPS, redirects and common website signals.</p>
+      <form id="scan-form" class="scan-form">
+        <label for="target-url">Website URL</label>
+        <div class="input-row">
+          <span class="input-icon" aria-hidden="true">↗</span>
+          <input id="target-url" name="url" type="text" inputmode="url" autocomplete="url" placeholder="https://example.com" maxlength="2048" required>
+          <button id="scan-button" type="submit"><span>Scan website</span><span aria-hidden="true">→</span></button>
+        </div>
+        <details class="token-details">
+          <summary>Remote API token <span>(only for protected remote deployments)</span></summary>
+          <input id="api-token" name="api-token" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your server API token; kept in this page only">
+          <p class="input-hint">The token is sent only with scan requests and is not saved by this page. Do not use a remote scanner over plain HTTP on an untrusted network.</p>
+        </details>
+        <p class="input-hint">Only scan websites you own or have explicit permission to assess. Private and local targets, unsafe DNS answers, alternate ports and HTTPS-to-HTTP redirects are blocked.</p>
+      </form>
+      <div id="error-box" class="error-box" role="alert" hidden></div>
+    </section>
+    <section id="results" class="results" aria-live="polite" hidden>
+      <div class="results-heading"><div><div class="eyebrow">SCAN REPORT</div><h2 id="report-title">Website report</h2><p id="report-subtitle" class="muted"></p></div><button id="export-button" class="secondary-button" type="button">Export JSON ↓</button></div>
+      <div class="summary-grid">
+        <article class="summary-card"><span class="summary-label">HTTP STATUS</span><strong id="status-value">—</strong><span class="summary-note">Response code</span></article>
+        <article class="summary-card"><span class="summary-label">CHECKS PASSED</span><strong id="passed-value">—</strong><span class="summary-note">Signals detected</span></article>
+        <article class="summary-card"><span class="summary-label">WARNINGS</span><strong id="warnings-value">—</strong><span class="summary-note">Items to review</span></article>
+      </div>
+      <div class="section-heading"><div><h3>Check results</h3><p class="muted">A missing signal is not proof of exploitability.</p></div><span id="check-count" class="count-pill"></span></div>
+      <div class="results-tools" role="search">
+        <label class="visually-hidden" for="check-search">Search checks</label>
+        <input id="check-search" type="search" placeholder="Search findings…" autocomplete="off">
+        <label class="visually-hidden" for="check-filter">Filter checks</label>
+        <select id="check-filter">
+          <option value="all">All findings</option>
+          <option value="warning">Warnings only</option>
+          <option value="pass">Passed checks</option>
+          <option value="info">Informational</option>
+        </select>
+        <button id="export-csv-button" class="secondary-button" type="button">Export CSV ↓</button>
+      </div>
+      <p id="filter-empty" class="muted filter-empty" hidden>No findings match your search.</p>
+      <div id="checks-list" class="checks-list"></div>
+      <details class="raw-details"><summary>Response metadata</summary><pre id="metadata"></pre></details>
+      <div class="disclaimer"><strong>Scope note</strong><p>This tool is not a penetration test and cannot certify a site as secure. Review findings in context and use a qualified security assessment for high-risk systems.</p></div>
+    </section>
+    <section class="feature-row">
+      <article><span class="feature-icon">⌁</span><h3>Safe by design</h3><p>DNS-pinned requests, safe redirects, network boundaries and private-address protections.</p></article>
+      <article><span class="feature-icon">◈</span><h3>Actionable signals</h3><p>Understand common header gaps and get a practical next step for each finding.</p></article>
+      <article><span class="feature-icon">⌘</span><h3>Portable reports</h3><p>Export a JSON report for issue tracking, learning or follow-up reviews.</p></article>
+    </section>
+  </main>
+  <footer><span>SiteSentry · Open-source website diagnostics</span><a href="https://github.com/" rel="noreferrer">GitHub</a><span>Built for responsible testing</span></footer>
+</body>
+</html>

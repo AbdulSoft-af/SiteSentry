@@ -1,0 +1,233 @@
+# SiteSentry
+
+SiteSentry is a self-hosted website diagnostics tool for developers and site owners. It checks a focused set of transport-security headers and page signals, then presents findings with clear explanations and next steps. The interface uses plain HTML, CSS and browser JavaScript; the backend uses built-in Node.js modules and does not require a third-party runtime package.
+
+SiteSentry is intentionally a **non-invasive first-pass review**, not a penetration test, vulnerability certification, or replacement for a qualified security assessment.
+
+## At a glance
+
+- Reviews HTTPS, HTTP status, redirects and common response-security headers.
+- Checks simple HTML signals such as a page title, forms, password fields and obvious HTTP asset references on HTTPS pages.
+- Includes searchable/filterable findings and JSON/CSV exports.
+- Uses DNS resolution validation and pinned addresses to reduce DNS-rebinding and DNS-check/connect race risks.
+- Rejects private, loopback, link-local, multicast, documentation and reserved address ranges, including unsafe mixed DNS answers.
+- Restricts requests to standard HTTP/HTTPS ports, GET requests, a short timeout, a limited redirect chain and a maximum inspected response size.
+- Runs locally by default. Remote binding requires explicit opt-in and a strong bearer token.
+
+## Requirements
+
+- Node.js 20 or newer
+- npm (included with Node.js)
+
+No database, account, frontend build step, or third-party UI framework is needed.
+
+## Quick start
+
+```bash
+git clone https://github.com/YOUR-USERNAME/SiteSentry.git
+cd SiteSentry
+npm run check
+npm test
+npm start
+```
+
+Open <http://127.0.0.1:4173>. The default listener is `127.0.0.1`, so the service is available only from the same machine.
+
+To change the local port:
+
+**macOS / Linux**
+
+```bash
+PORT=5000 npm start
+```
+
+**Windows PowerShell**
+
+```powershell
+$env:PORT = "5000"
+npm start
+```
+
+For development with automatic restarts, run `npm run dev`.
+
+## Use the dashboard
+
+1. Start SiteSentry and open the local address in a browser.
+2. Enter a public website URL, such as `https://example.com`.
+3. Select **Scan website**.
+4. Review the response status, passed checks, warnings and recommendations.
+5. Search or filter findings to focus on a particular issue.
+6. Select **Export JSON** for a complete machine-readable report or **Export CSV** for a spreadsheet-friendly report.
+
+Only assess websites you own or have explicit permission to review. A warning is a prompt to investigate, not proof that a vulnerability can be exploited. A pass indicates only that the scanner observed a particular signal; it is not a security guarantee.
+
+## What the scanner checks
+
+### Transport and response
+
+- Whether the final URL uses HTTPS
+- HTTP status, content type, final URL and bounded redirect chain
+- Response headers, including CSP, HSTS, clickjacking protections, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy`
+- An obvious HTML title, form/password-field presence and simple HTTP asset references inside an HTTPS HTML response
+
+### Defensive request boundaries
+
+- HTTP and HTTPS only; URL credentials are rejected
+- Standard ports only: HTTP port 80 and HTTPS port 443
+- DNS A/AAAA answers are resolved before connecting and every returned address is validated
+- Mixed DNS answer sets containing any unsafe address are rejected
+- Each request is connected to one of the exact addresses validated for that request, instead of performing a second DNS lookup at connect time
+- Redirects are followed manually; each next destination is revalidated, and HTTPS-to-HTTP downgrade redirects are blocked
+- Local, private, loopback, link-local, multicast, documentation and reserved targets are rejected
+- GET only, default 8-second total scan timeout, up to three redirects, and a 512 KiB maximum inspected response body
+- Basic in-memory per-client request throttling, request-size limits and HTTP server timeouts
+
+These controls reduce risk, but they do not replace network-level egress restrictions, operating-system isolation, or review of the deployed environment.
+
+## API
+
+### `GET /api/health`
+
+Returns a small unauthenticated health response:
+
+```json
+{
+  "ok": true,
+  "name": "SiteSentry",
+  "version": "1.2.0"
+}
+```
+
+### `POST /api/scan`
+
+Request body:
+
+```json
+{
+  "url": "https://example.com"
+}
+```
+
+Example for the default local deployment:
+
+```bash
+curl -s http://127.0.0.1:4173/api/health
+curl -s -X POST http://127.0.0.1:4173/api/scan \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}'
+```
+
+A successful response includes the scan timestamp, requested and final URL, HTTP status, redirect chain, response headers, findings, summary counts and known limitations. Errors return a JSON object with an error message and an appropriate HTTP status.
+
+## Remote deployment: protected mode only
+
+The default loopback configuration is recommended for personal use. **Do not run an unrestricted public scanner.** Anyone who can submit scan requests can consume resources and use the service to send traffic to public websites, even when private-network SSRF targets are blocked.
+
+To bind on a network interface, set all of the following:
+
+- `HOST` to the intended interface, commonly `0.0.0.0` inside a container
+- `SITESENTRY_ALLOW_REMOTE=true` as an explicit opt-in
+- `SITESENTRY_API_TOKEN` to a randomly generated secret of at least 32 characters
+
+Generate a token on macOS/Linux with:
+
+```bash
+openssl rand -hex 32
+```
+
+PowerShell alternative:
+
+```powershell
+-join ((1..64 | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) }))
+```
+
+Store the value in your deployment platform's secret manager or environment configuration. Do not commit it to source control, put it into `public/app.js`, or share it in screenshots. In remote mode, the dashboard's **Remote API token** field sends the token in the `Authorization: Bearer ...` header; it is kept in page memory and is not written to local storage. Use HTTPS between the browser and the deployment (normally through a properly configured TLS reverse proxy). Do not send bearer tokens over plain HTTP on an untrusted network.
+
+Example environment for a protected container or server process:
+
+```bash
+HOST=0.0.0.0 \
+SITESENTRY_ALLOW_REMOTE=true \
+SITESENTRY_API_TOKEN='set-a-random-secret-of-at-least-32-characters' \
+npm start
+```
+
+This example does not configure TLS or a firewall. Before exposing the service, also:
+
+1. Terminate TLS at a maintained reverse proxy or hosting platform.
+2. Apply firewall/egress rules so the scanner process cannot reach private, link-local, metadata or control-plane networks. Allow only the outbound traffic it needs.
+3. Add proxy-level rate limiting and abuse monitoring. SiteSentry deliberately does not trust forwarded IP headers, so requests behind a reverse proxy may share the proxy's apparent client address for its built-in limiter.
+4. Keep Node.js and the operating system updated, rotate the API token, and monitor resource use.
+5. Never expose the Node port directly to the internet without the protection layer above.
+
+The in-memory rate limiter is intentionally small and is not a distributed abuse-control system. Use a gateway/WAF or equivalent service-side controls for multi-user deployments.
+
+## Configuration
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `HOST` | `127.0.0.1` | Listener interface; non-loopback requires remote opt-in and a token |
+| `PORT` | `4173` | HTTP listener port |
+| `SITESENTRY_ALLOW_REMOTE` | unset | Must be `true` for non-loopback binding |
+| `SITESENTRY_API_TOKEN` | unset | Required in remote mode; minimum 32 characters |
+| Scan timeout | 8 seconds | Total scan timeout, bounded internally to 1–15 seconds |
+| Redirect limit | 3 hops | Maximum redirects followed |
+| Inspected body | 512 KiB | Maximum response body inspected |
+| Rate limit | 12 per client per minute | In-memory request throttling |
+
+## Result interpretation and limitations
+
+- **Pass:** the expected signal was observed, not that the whole configuration is correct.
+- **Warning:** a signal is missing or a possible issue was observed. Confirm it against the site's architecture.
+- **Info:** a detected feature needs manual review rather than an automatic verdict.
+- **Severity:** a triage hint, not a calculated risk score.
+
+SiteSentry does not execute JavaScript, crawl an entire site, log in, submit forms, test CSRF, exploit vulnerabilities, inspect source repositories, audit server-side code, or verify ownership of the target. It cannot reliably judge the quality of every CSP, authentication flow, cookie policy, or application authorization rule. DNS pinning does not protect against every routing, proxy, kernel, or infrastructure misconfiguration. Egress firewall rules remain an important independent control.
+
+Report exports may contain hostnames and response metadata. Store and share them carefully.
+
+## Project layout
+
+```text
+SiteSentry/
+├── .github/workflows/ci.yml  # CI for syntax checks and tests
+├── public/
+│   ├── index.html            # accessible dashboard structure
+│   ├── styles.css            # responsive visual styles
+│   └── app.js                # scan form, token input, filters and exports
+├── src/
+│   ├── scanner.js            # URL validation, DNS policy and pinned HTTP requests
+│   └── server.js             # HTTP server, remote auth and API limits
+├── tests/
+│   └── scanner.test.js       # URL, IP range and DNS-policy tests
+├── SECURITY.md
+├── LICENSE
+├── package.json
+└── README.md
+```
+
+## Development
+
+Run the syntax checks and tests before submitting changes:
+
+```bash
+npm run check
+npm test
+```
+
+GitHub Actions runs these checks on pushes and pull requests. Security-sensitive changes should include both rejected-input tests and positive tests for legitimate public targets.
+
+## Contributing
+
+Focused bug reports, documentation improvements and tests are welcome. Include expected behavior, safe reproduction steps and relevant test output. Avoid unnecessary dependencies. Do not contribute features intended for stealth, credential theft, unauthorized exploitation, or bypassing access controls.
+
+## Roadmap
+
+- OS/container egress policy examples for common deployment patterns
+- Additional tests for connection failures, redirect behavior and response truncation
+- Optional accessibility and SEO diagnostics with clear confidence notes
+- Additional export formats and localization support
+
+## License
+
+MIT. See [LICENSE](LICENSE).
