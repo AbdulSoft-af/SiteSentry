@@ -1,45 +1,92 @@
-# SiteSentry
+# 🛡️ SiteSentry
 
-SiteSentry is a self-hosted website diagnostics tool for developers and site owners. It checks a focused set of transport-security headers and page signals, then presents findings with clear explanations and next steps. The interface uses plain HTML, CSS and browser JavaScript; the backend uses built-in Node.js modules and does not require a third-party runtime package.
+<p align="center">
+  <strong>Lightweight Website Security Diagnostics</strong>
+  <br>
+  <em>Inspect · Understand · Improve</em>
+  <br><br>
+  A self-hosted, non-invasive website diagnostics tool for developers and site owners.
+</p>
 
-SiteSentry is intentionally a **non-invasive first-pass review**, not a penetration test, vulnerability certification, or replacement for a qualified security assessment.
+<p align="center">
+  <strong>🔒 HTTPS & Headers</strong> ·
+  <strong>🌐 DNS Safety</strong> ·
+  <strong>📊 Security Reports</strong>
+</p>
 
-## At a glance
+---
 
-- Reviews HTTPS, HTTP status, redirects and common response-security headers.
-- Checks simple HTML signals such as a page title, forms, password fields and obvious HTTP asset references on HTTPS pages.
-- Includes searchable/filterable findings and JSON/CSV exports.
-- Uses DNS resolution validation and pinned addresses to reduce DNS-rebinding and DNS-check/connect race risks.
-- Rejects private, loopback, link-local, multicast, documentation and reserved address ranges, including unsafe mixed DNS answers.
-- Restricts requests to standard HTTP/HTTPS ports, GET requests, a short timeout, a limited redirect chain and a maximum inspected response size.
-- Runs locally by default. Remote binding requires explicit opt-in and a strong bearer token.
+## 📌 Overview
 
-## Requirements
+SiteSentry is a lightweight, self-hosted website diagnostics tool that examines a focused set of transport-security headers, HTTP responses, redirects, and basic HTML signals.
+
+Built with **HTML, CSS, Vanilla JavaScript, and native Node.js modules**, it presents findings with clear explanations and actionable next steps — without requiring third-party runtime packages.
+
+> **Security by design:** SiteSentry is a non-invasive first-pass review tool, not a penetration test, vulnerability certification, or replacement for a qualified security assessment.
+
+## ✨ Key Features
+
+- 🔐 **HTTPS Analysis** — Check HTTPS usage, HTTP status codes, and final destinations.
+- 🛡️ **Security Header Checks** — Review CSP, HSTS, clickjacking protections, and other common response headers.
+- 🌐 **DNS Validation** — Validate DNS answers and reject unsafe mixed address sets.
+- 🔗 **Redirect Inspection** — Revalidate redirect destinations and block HTTPS-to-HTTP downgrade redirects.
+- 🧩 **HTML Signal Detection** — Inspect page titles, forms, password fields, and obvious HTTP asset references on HTTPS pages.
+- 🔎 **Search & Filtering** — Find relevant diagnostic results quickly.
+- 📤 **JSON & CSV Exports** — Export reports for further analysis and documentation.
+- ⚡ **Lightweight Runtime** — Use built-in Node.js modules without third-party runtime dependencies.
+- 🖥️ **Local-First Operation** — Run locally by default, with explicit safeguards for remote access.
+
+## 🧰 Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| HTML5 | Dashboard structure |
+| CSS3 | Styling and responsive layout |
+| Vanilla JavaScript | Frontend interactions |
+| Node.js 20+ | Backend and scanning engine |
+| Built-in Node.js modules | HTTP, HTTPS, DNS, and networking |
+| Node.js Test Runner | Automated testing |
+
+## 📋 Requirements
 
 - Node.js 20 or newer
-- npm (included with Node.js)
+- npm, included with Node.js
 
-No database, account, frontend build step, or third-party UI framework is needed.
+No database, user account, frontend build step, or third-party UI framework is required.
 
-## Quick start
+## 🚀 Quick Start
+
+### 1. Clone the repository
+
+Replace `YOUR-USERNAME` with your GitHub username.
 
 ```bash
 git clone https://github.com/YOUR-USERNAME/SiteSentry.git
 cd SiteSentry
+```
+
+### 2. Run checks and tests
+
+```bash
 npm run check
 npm test
+```
+
+### 3. Start SiteSentry
+
+```bash
 npm start
 ```
 
-Open <http://127.0.0.1:4173>. The default listener is `127.0.0.1`, so the service is available only from the same machine.
+### 4. Open the dashboard
 
-To change the local port:
+Visit:
 
-**macOS / Linux**
+**http://127.0.0.1:4173**
 
-```bash
-PORT=5000 npm start
-```
+By default, SiteSentry listens on `127.0.0.1`, so it is accessible only from the same machine.
+
+### ⚙️ Change the Local Port
 
 **Windows PowerShell**
 
@@ -48,65 +95,138 @@ $env:PORT = "5000"
 npm start
 ```
 
-For development with automatic restarts, run `npm run dev`.
+**macOS / Linux**
 
-## Use the dashboard
+```bash
+PORT=5000 npm start
+```
 
-1. Start SiteSentry and open the local address in a browser.
+For automatic restarts during development:
+
+```bash
+npm run dev
+```
+
+## 🖥️ Using the Dashboard
+
+1. Start SiteSentry and open the local dashboard.
 2. Enter a public website URL, such as `https://example.com`.
 3. Select **Scan website**.
-4. Review the response status, passed checks, warnings and recommendations.
-5. Search or filter findings to focus on a particular issue.
-6. Select **Export JSON** for a complete machine-readable report or **Export CSV** for a spreadsheet-friendly report.
+4. Review the response status, passed checks, warnings, and recommendations.
+5. Search or filter findings to investigate specific signals.
+6. Select **Export JSON** or **Export CSV** to save the report.
 
-Only assess websites you own or have explicit permission to review. A warning is a prompt to investigate, not proof that a vulnerability can be exploited. A pass indicates only that the scanner observed a particular signal; it is not a security guarantee.
+Only assess websites you own or have explicit permission to review.
 
-### Transport and response
+## 🔍 Diagnostic Coverage
+
+### 🌐 Transport & Response
+
+SiteSentry inspects:
 
 - Whether the final URL uses HTTPS
-- HTTP status, content type, final URL and bounded redirect chain
-- Response headers, including CSP, HSTS, clickjacking protections, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy`
-- An obvious HTML title, form/password-field presence and simple HTTP asset references inside an HTTPS HTML response
+- HTTP status and content type
+- Final URL and bounded redirect chain
+- Content Security Policy (CSP)
+- HTTP Strict Transport Security (HSTS)
+- Clickjacking protection headers
+- `X-Content-Type-Options`
+- `Referrer-Policy`
+- `Permissions-Policy`
+- Basic HTML title and form/password-field signals
+- Obvious HTTP asset references within HTTPS HTML responses
 
-### Defensive request boundaries
+### 🛡️ Defensive Request Boundaries
 
-- HTTP and HTTPS only; URL credentials are rejected
-- Standard ports only: HTTP port 80 and HTTPS port 443
-- DNS A/AAAA answers are resolved before connecting and every returned address is validated
-- Mixed DNS answer sets containing any unsafe address are rejected
-- Each request is connected to one of the exact addresses validated for that request, instead of performing a second DNS lookup at connect time
-- Redirects are followed manually; each next destination is revalidated, and HTTPS-to-HTTP downgrade redirects are blocked
-- Local, private, loopback, link-local, multicast, documentation and reserved targets are rejected
-- GET only, default 8-second total scan timeout, up to three redirects, and a 512 KiB maximum inspected response body
-- Basic in-memory per-client request throttling, request-size limits and HTTP server timeouts
+SiteSentry implements request restrictions designed to reduce the risk of unsafe outbound connections:
 
-These controls reduce risk, but they do not replace network-level egress restrictions, operating-system isolation, or review of the deployed environment.
+- Allows HTTP and HTTPS only; rejects URL credentials.
+- Restricts destinations to standard ports: HTTP `80` and HTTPS `443`.
+- Resolves DNS A/AAAA answers before connecting and validates every returned address.
+- Rejects mixed DNS responses containing any unsafe address.
+- Pins each connection to an address validated for that request, reducing DNS-rebinding and DNS-check/connect race risks.
+- Follows redirects manually and revalidates each destination.
+- Blocks HTTPS-to-HTTP downgrade redirects.
+- Rejects local, private, loopback, link-local, multicast, documentation, reserved, and other prohibited address ranges.
+- Uses GET requests only.
+- Applies a default total scan timeout of 8 seconds.
+- Limits redirects to three and inspected response bodies to 512 KiB.
+- Applies basic in-memory per-client throttling, request-size limits, and HTTP server timeouts.
 
+These controls reduce risk but do not eliminate every possible networking or infrastructure threat.
 
-## Result interpretation and limitations
+## 📊 Understanding Results
 
-- **Pass:** the expected signal was observed, not that the whole configuration is correct.
-- **Warning:** a signal is missing or a possible issue was observed. Confirm it against the site's architecture.
-- **Info:** a detected feature needs manual review rather than an automatic verdict.
-- **Severity:** a triage hint, not a calculated risk score.
+| Finding | Meaning |
+|---|---|
+| ✅ Pass | An expected signal was observed. |
+| ⚠️ Warning | A possible issue or missing signal requires investigation. |
+| ℹ️ Info | A detected feature requires manual review. |
+| Severity | A triage hint, not a calculated risk score. |
 
-SiteSentry does not execute JavaScript, crawl an entire site, log in, submit forms, test CSRF, exploit vulnerabilities, inspect source repositories, audit server-side code, or verify ownership of the target. It cannot reliably judge the quality of every CSP, authentication flow, cookie policy, or application authorization rule. DNS pinning does not protect against every routing, proxy, kernel, or infrastructure misconfiguration. Egress firewall rules remain an important independent control.
+A **Pass** does not mean the website is completely secure. A **Warning** does not prove that a vulnerability is exploitable. Always interpret findings within the context of the target website's architecture.
 
-Report exports may contain hostnames and response metadata. Store and share them carefully.
+## ⚠️ Scope & Limitations
 
+SiteSentry is a first-pass diagnostics tool. It does not:
 
-## Development
+- Execute JavaScript or crawl an entire website.
+- Log in to websites or submit forms.
+- Test CSRF or exploit vulnerabilities.
+- Inspect source repositories or audit server-side application code.
+- Verify ownership of the target website.
+- Fully evaluate CSP quality, authentication flows, cookie policies, or application authorization rules.
 
-Run the syntax checks and tests before submitting changes:
+DNS pinning does not protect against every routing, proxy, kernel, or infrastructure misconfiguration. Network-level egress filtering and appropriate operating-system isolation remain important independent controls.
+
+**Responsible use:** Only scan websites you own or have explicit permission to assess.
+
+Exported reports may contain hostnames and response metadata. Store and share them carefully.
+
+## 🧪 Development & Testing
+
+Run syntax checks and tests before submitting changes:
 
 ```bash
 npm run check
 npm test
 ```
 
-GitHub Actions runs these checks on pushes and pull requests. Security-sensitive changes should include both rejected-input tests and positive tests for legitimate public targets.
+GitHub Actions runs these checks on pushes and pull requests.
 
-## Contributing
+Security-sensitive changes should include both rejected-input tests and positive tests for legitimate public targets.
 
-Focused bug reports, documentation improvements and tests are welcome. Include expected behavior, safe reproduction steps and relevant test output. Avoid unnecessary dependencies. Do not contribute features intended for stealth, credential theft, unauthorized exploitation, or bypassing access controls.
+## 🤝 Contributing
 
+Contributions are welcome!
+
+You can contribute by submitting:
+
+- Focused bug fixes
+- Documentation improvements
+- Automated tests
+- Defensive security enhancements
+- Usability and accessibility improvements
+
+Please include expected behavior, safe reproduction steps, and relevant test output.
+
+Avoid unnecessary dependencies and features designed for stealth, credential theft, unauthorized exploitation, or bypassing access controls.
+
+## 📄 License
+
+SiteSentry is distributed under the **MIT License**.
+
+You are free to use, copy, modify, distribute, sublicense, and sell copies of the software, subject to the terms and conditions of the license.
+
+**[📜 Read the MIT License](LICENSE)**
+
+To complete the license setup, create a file named `LICENSE` in the repository root containing the official MIT License text, with the appropriate copyright year and copyright holder.
+
+
+<p align="center">
+  <strong>🛡️ SiteSentry</strong>
+  <br>
+  <em>Clearer Insights. Safer Websites.</em>
+  <br><br>
+  Built for developers who take website security seriously.
+</p>
