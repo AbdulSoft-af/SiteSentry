@@ -186,25 +186,6 @@ SiteSentry does not execute JavaScript, crawl an entire site, log in, submit for
 
 Report exports may contain hostnames and response metadata. Store and share them carefully.
 
-## Project layout
-
-```text
-SiteSentry/
-├── .github/workflows/ci.yml  # CI for syntax checks and tests
-├── public/
-│   ├── index.html            # accessible dashboard structure
-│   ├── styles.css            # responsive visual styles
-│   └── app.js                # scan form, token input, filters and exports
-├── src/
-│   ├── scanner.js            # URL validation, DNS policy and pinned HTTP requests
-│   └── server.js             # HTTP server, remote auth and API limits
-├── tests/
-│   └── scanner.test.js       # URL, IP range and DNS-policy tests
-├── SECURITY.md
-├── LICENSE
-├── package.json
-└── README.md
-```
 
 ## Development
 
@@ -221,13 +202,3 @@ GitHub Actions runs these checks on pushes and pull requests. Security-sensitive
 
 Focused bug reports, documentation improvements and tests are welcome. Include expected behavior, safe reproduction steps and relevant test output. Avoid unnecessary dependencies. Do not contribute features intended for stealth, credential theft, unauthorized exploitation, or bypassing access controls.
 
-## Roadmap
-
-- OS/container egress policy examples for common deployment patterns
-- Additional tests for connection failures, redirect behavior and response truncation
-- Optional accessibility and SEO diagnostics with clear confidence notes
-- Additional export formats and localization support
-
-## License
-
-MIT. See [LICENSE](LICENSE).
