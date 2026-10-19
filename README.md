@@ -61,8 +61,6 @@ For development with automatic restarts, run `npm run dev`.
 
 Only assess websites you own or have explicit permission to review. A warning is a prompt to investigate, not proof that a vulnerability can be exploited. A pass indicates only that the scanner observed a particular signal; it is not a security guarantee.
 
-## What the scanner checks
-
 ### Transport and response
 
 - Whether the final URL uses HTTPS
@@ -84,96 +82,6 @@ Only assess websites you own or have explicit permission to review. A warning is
 
 These controls reduce risk, but they do not replace network-level egress restrictions, operating-system isolation, or review of the deployed environment.
 
-## API
-
-### `GET /api/health`
-
-Returns a small unauthenticated health response:
-
-```json
-{
-  "ok": true,
-  "name": "SiteSentry",
-  "version": "1.2.0"
-}
-```
-
-### `POST /api/scan`
-
-Request body:
-
-```json
-{
-  "url": "https://example.com"
-}
-```
-
-Example for the default local deployment:
-
-```bash
-curl -s http://127.0.0.1:4173/api/health
-curl -s -X POST http://127.0.0.1:4173/api/scan \
-  -H 'content-type: application/json' \
-  -d '{"url":"https://example.com"}'
-```
-
-A successful response includes the scan timestamp, requested and final URL, HTTP status, redirect chain, response headers, findings, summary counts and known limitations. Errors return a JSON object with an error message and an appropriate HTTP status.
-
-## Remote deployment: protected mode only
-
-The default loopback configuration is recommended for personal use. **Do not run an unrestricted public scanner.** Anyone who can submit scan requests can consume resources and use the service to send traffic to public websites, even when private-network SSRF targets are blocked.
-
-To bind on a network interface, set all of the following:
-
-- `HOST` to the intended interface, commonly `0.0.0.0` inside a container
-- `SITESENTRY_ALLOW_REMOTE=true` as an explicit opt-in
-- `SITESENTRY_API_TOKEN` to a randomly generated secret of at least 32 characters
-
-Generate a token on macOS/Linux with:
-
-```bash
-openssl rand -hex 32
-```
-
-PowerShell alternative:
-
-```powershell
--join ((1..64 | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) }))
-```
-
-Store the value in your deployment platform's secret manager or environment configuration. Do not commit it to source control, put it into `public/app.js`, or share it in screenshots. In remote mode, the dashboard's **Remote API token** field sends the token in the `Authorization: Bearer ...` header; it is kept in page memory and is not written to local storage. Use HTTPS between the browser and the deployment (normally through a properly configured TLS reverse proxy). Do not send bearer tokens over plain HTTP on an untrusted network.
-
-Example environment for a protected container or server process:
-
-```bash
-HOST=0.0.0.0 \
-SITESENTRY_ALLOW_REMOTE=true \
-SITESENTRY_API_TOKEN='set-a-random-secret-of-at-least-32-characters' \
-npm start
-```
-
-This example does not configure TLS or a firewall. Before exposing the service, also:
-
-1. Terminate TLS at a maintained reverse proxy or hosting platform.
-2. Apply firewall/egress rules so the scanner process cannot reach private, link-local, metadata or control-plane networks. Allow only the outbound traffic it needs.
-3. Add proxy-level rate limiting and abuse monitoring. SiteSentry deliberately does not trust forwarded IP headers, so requests behind a reverse proxy may share the proxy's apparent client address for its built-in limiter.
-4. Keep Node.js and the operating system updated, rotate the API token, and monitor resource use.
-5. Never expose the Node port directly to the internet without the protection layer above.
-
-The in-memory rate limiter is intentionally small and is not a distributed abuse-control system. Use a gateway/WAF or equivalent service-side controls for multi-user deployments.
-
-## Configuration
-
-| Setting | Default | Purpose |
-| --- | --- | --- |
-| `HOST` | `127.0.0.1` | Listener interface; non-loopback requires remote opt-in and a token |
-| `PORT` | `4173` | HTTP listener port |
-| `SITESENTRY_ALLOW_REMOTE` | unset | Must be `true` for non-loopback binding |
-| `SITESENTRY_API_TOKEN` | unset | Required in remote mode; minimum 32 characters |
-| Scan timeout | 8 seconds | Total scan timeout, bounded internally to 1–15 seconds |
-| Redirect limit | 3 hops | Maximum redirects followed |
-| Inspected body | 512 KiB | Maximum response body inspected |
-| Rate limit | 12 per client per minute | In-memory request throttling |
 
 ## Result interpretation and limitations
 
